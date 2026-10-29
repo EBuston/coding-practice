@@ -14,23 +14,18 @@ for i in range(-2,3,1): # loops through all options of $n_x$
             n_2[h]= g[h,0]**2 + g[h,1]**2 + g[h,2]**2
 
             h+=1
-#print(g)
-print()
-sq=[] #the list of unique n_2 values
+
+unique=[] #the list of unique n_2 values
+first_15_vectors = [] #list of 15 vectors with lowest n_2 values
 for m in n_2:
-    if m not in sq:
-        sq.append(float(m))
-list.sort(sq)
-#print(sq)
+    if m not in unique:
+        unique.append(float(m))
+list.sort(unique)
 counts=[] #list of indices of vectors with lowest 3 values of n_2 
 for q in range(len(n_2)):
-    if float(n_2[q]) == 4.0 or float(n_2[q])==3.0 or float(n_2[q])==0.0:
-        counts.append(
-            q)
-#print(counts)
-print()
-for num in counts:
-    ones = g[num]
-    print(ones)
+    if float(n_2[q]) == unique[0] or float(n_2[q])==unique[1] or float(n_2[q])==unique[2]:
+        counts.append(q)
+        first_15_vectors.append(g[q])
 
-new = counts #add comment
+first_15_vectors = np.array(first_15_vectors)
+print(first_15_vectors)
