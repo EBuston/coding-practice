@@ -31,8 +31,17 @@ def find_unique(n_2, g, num_lowest_n_2s):
     print(unique[0:num_lowest_n_2s])
     return np.array(first)
 
+def V_g_dd(n_2, g, first_vectors):
+    #function to set up the V_g'' = V_(g-g') terms in the NxN matrix employing N lowest magnitude RLVs 
+    S_of_g_dd = []
+    for i in range(len(first_vectors)):
+        S_of_g_dd.append(np.cos(np.pi/4 * (g[i][0] + g[i][1] + g[i][2])))
+    return np.array(S_of_g_dd)
+
+
+V_of_mag = [0,0,0,0,0]
 
 g, n_2 = find_gs(-2,3,125)
-
-first_15_vectors = find_unique(n_2,g,5)
-print(first_15_vectors)
+first_vectors = find_unique(n_2,g,5)
+print(first_vectors)
+print(V_g_dd(n_2,g,first_vectors))
