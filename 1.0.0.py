@@ -1,4 +1,7 @@
 import numpy as np
+global h_bar, m_e
+h_bar = 1.054572*10**(-34)
+m_e = 9.109384*10**(-31)
 
 def find_gs(min, max, total_vectors):
     g = np.zeros((total_vectors, 3)) #=> 2d matrix, 125x3
@@ -51,12 +54,15 @@ def V_g_dd_fcc(n_2, g, first_vectors, V_of_mag_g_d, considered_form_factors):
 
 V_of_mag = [[0,0],[3,0],[8,0],[11,0]] #for free electron
 considered_form_factors_Si = [0,3,8,11] #considered form factors V0, V3, V8, V11
+k = [1,1,1] #trial setting for vector k
 
 g, n_2 = find_gs(-2,3,125)
 first_vectors = find_unique(n_2,g,5)
 #print(first_vectors)
 print(V_g_dd_fcc(n_2,g,first_vectors, V_of_mag, considered_form_factors_Si))
 
-
+def create_matrix():
+    eqn = -h_bar**2/(2*m_e)
+    return eqn
 
 e_vals = np.linalg.eigvalsh([[1,0],[0,1]])
