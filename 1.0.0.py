@@ -1,7 +1,8 @@
 import numpy as np
-global h_bar, m_e
+global h_bar, m_e, e
 h_bar = 1.054572*10**(-34)
 m_e = 9.109384*10**(-31)
+e = 1.6*10**(-19)
 
 def find_gs(min, max, total_vectors):
     g = np.zeros((total_vectors, 3)) #=> 2d matrix, 125x3
@@ -34,7 +35,7 @@ def find_unique(n_2, g, num_lowest_n_2s):
     #print(unique[0:num_lowest_n_2s])
     return np.array(first)
 
-def V_g_dd_fcc(n_2, g, first_vectors, V_of_mag_g_d, considered_form_factors):
+def V_g_dd_fcc(n_2, g, g_dd, first_vectors, V_of_mag_g_d, considered_form_factors):
     #function to set up the V_g'' = V_(g-g') terms in the NxN matrix employing N lowest magnitude RLVs 
     #this only works for fcc lattices like Si, not GaAr, for which another function must be used
     S_of_g_dd, sum_of_n_d_sq, V_g_dd = [], [], []
@@ -42,7 +43,7 @@ def V_g_dd_fcc(n_2, g, first_vectors, V_of_mag_g_d, considered_form_factors):
         s = abs(first_vectors[i][0])**2 + abs(first_vectors[i][1])**2 + abs(first_vectors[i][2])**2
         if s in considered_form_factors:
             sum_of_n_d_sq.append(s)
- 
+        
             S_of_g_dd.append(np.cos(np.pi/4 * (first_vectors[i][0] + first_vectors[i][1] + first_vectors[i][2])))
             for j in V_of_mag_g_d:
                 if s==j[0]:
@@ -50,19 +51,35 @@ def V_g_dd_fcc(n_2, g, first_vectors, V_of_mag_g_d, considered_form_factors):
             V_g_dd.append(V)
     return np.array(S_of_g_dd)*np.array(V_g_dd) #, np.array(sum_of_n_d_sq)
 
-
+#create matrix of g_dd s
+def matrix_g_dd(gs):
+    #g_dd = np.zeros((len(gs),len(gs)))
+    g_dd = []
+    for i in range(len(gs)):
+        row = []
+        for j in range(len(gs)):
+            val = gs[i] - gs[j]
+            row.append(val)
+        g_dd.append(row)
+    print(np.array(g_dd))
+    return np.array(g_dd)
 
 V_of_mag = [[0,0],[3,0],[8,0],[11,0]] #for free electron
 considered_form_factors_Si = [0,3,8,11] #considered form factors V0, V3, V8, V11
 k = [1,1,1] #trial setting for vector k
 
 g, n_2 = find_gs(-2,3,125)
-first_vectors = find_unique(n_2,g,5)
+first_vectors = find_unique(n_2,g,3)
 #print(first_vectors)
-print(V_g_dd_fcc(n_2,g,first_vectors, V_of_mag, considered_form_factors_Si))
+V_g_dd_vals = V_g_dd_fcc(n_2,g,first_vectors, V_of_mag, considered_form_factors_Si)
+#print(V_g_dd_vals)
+g_dd = matrix_g_dd(first_vectors)
 
-def create_matrix():
-    eqn = -h_bar**2/(2*m_e)
+def create_matrix(k,g):
+    for i in range(len(g)):
+        eqn = -h_bar**2/(2*m_e*e) * (abs(k + g[i]))**2
+        #print(eqn)
     return eqn
 
 e_vals = np.linalg.eigvalsh([[1,0],[0,1]])
+create_matrix(k,g)
