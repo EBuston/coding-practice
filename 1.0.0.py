@@ -35,45 +35,60 @@ def find_unique(n_2, g, num_lowest_n_2s):
     #print(unique[0:num_lowest_n_2s])
     return np.array(first)
 
-def V_g_dd_fcc(n_2, g, g_dd, first_vectors, V_of_mag_g_d, considered_form_factors):
+def V_g_dd_fcc(g_dd, g_dd_mag, V_of_mag_g_d, considered_form_factors):
     #function to set up the V_g'' = V_(g-g') terms in the NxN matrix employing N lowest magnitude RLVs 
     #this only works for fcc lattices like Si, not GaAr, for which another function must be used
+    # currently doesn't take into account filtering out g'' with certain magnitudes
+
     S_of_g_dd, sum_of_n_d_sq, V_g_dd = [], [], []
-    for i in range(len(first_vectors)):
-        s = abs(first_vectors[i][0])**2 + abs(first_vectors[i][1])**2 + abs(first_vectors[i][2])**2
-        if s in considered_form_factors:
-            sum_of_n_d_sq.append(s)
-        
-            S_of_g_dd.append(np.cos(np.pi/4 * (first_vectors[i][0] + first_vectors[i][1] + first_vectors[i][2])))
-            for j in V_of_mag_g_d:
-                if s==j[0]:
-                    V = j[1]
-            V_g_dd.append(V)
+    for i in range(len(g_dd)):
+        V_row = []
+        S_of_g_dd_row = []
+        for j in range(len(g_dd)):
+            s = abs(g_dd[i][j][0])**2 + abs(g_dd[i][j][1])**2 + abs(g_dd[i][j][2])**2
+            #if g_dd_mag[i][j] in considered_form_factors:
+            sum_of_n_d_sq.append(g_dd_mag[i][j])
+
+            S_of_g_dd_row.append(np.cos(np.pi/4 * (g_dd[i][j][0] + g_dd[i][j][1] + g_dd[i][j][2])))
+            for k in V_of_mag_g_d:
+                if s==k[0]:
+                    V = k[1]
+                else:
+                    V = 0
+            V_row.append(V)
+        S_of_g_dd.append(S_of_g_dd_row)
+        V_g_dd.append(V_row)
     return np.array(S_of_g_dd)*np.array(V_g_dd) #, np.array(sum_of_n_d_sq)
 
 #create matrix of g_dd s
 def matrix_g_dd(gs):
     #g_dd = np.zeros((len(gs),len(gs)))
     g_dd = []
+    g_dd_mag = []
     for i in range(len(gs)):
         row = []
+        row_mag_sq = []
         for j in range(len(gs)):
             val = gs[i] - gs[j]
+            row_mag_sq.append(val[0]**2 + val[1]**2 + val[2]**2)
             row.append(val)
         g_dd.append(row)
+        g_dd_mag.append(row_mag_sq)
     print(np.array(g_dd))
-    return np.array(g_dd)
+    print(np.array(g_dd_mag))
+    return np.array(g_dd), np.array(g_dd_mag)
 
-V_of_mag = [[0,0],[3,0],[8,0],[11,0]] #for free electron
-considered_form_factors_Si = [0,3,8,11] #considered form factors V0, V3, V8, V11
+V_of_mag = [[3,0],[8,0],[11,0]] #for free electron
+considered_form_factors_Si = [3,8,11] #considered form factors V3, V8, V11
 k = [1,1,1] #trial setting for vector k
 
 g, n_2 = find_gs(-2,3,125)
 first_vectors = find_unique(n_2,g,3)
 #print(first_vectors)
-V_g_dd_vals = V_g_dd_fcc(n_2,g,first_vectors, V_of_mag, considered_form_factors_Si)
+g_dd, g_dd_mag = matrix_g_dd(first_vectors)
+V_g_dd_vals = V_g_dd_fcc(g_dd,g_dd_mag, V_of_mag, considered_form_factors_Si)
 #print(V_g_dd_vals)
-g_dd = matrix_g_dd(first_vectors)
+
 
 def create_matrix(k,g):
     for i in range(len(g)):
@@ -82,4 +97,5 @@ def create_matrix(k,g):
     return eqn
 
 e_vals = np.linalg.eigvalsh([[1,0],[0,1]])
-create_matrix(k,g)
+#create_matrix(k,g)
+
