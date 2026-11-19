@@ -3,6 +3,7 @@ global h_bar, m_e, e
 h_bar = 1.054572*10**(-34)
 m_e = 9.109384*10**(-31)
 e = 1.6*10**(-19)
+A_si = 5.43*10**(-10)
 
 def find_gs(min, max, total_vectors):
     g = np.zeros((total_vectors, 3)) #=> 2d matrix, 125x3
@@ -80,7 +81,11 @@ def matrix_g_dd(gs):
 
 V_of_mag = [[3,0],[8,0],[11,0]] #for free electron
 considered_form_factors_Si = [3,8,11] #considered form factors V3, V8, V11
-k = [1,1,1] #trial setting for vector k
+#different values of k
+k_lambda = 2*np.pi*np.array([0,0,0]) / A_si
+k_L = 2*np.pi*np.array([0.5, 0.5, 0.5]) / A_si #trial setting for vector k
+k_X = 2*np.pi*np.array([1,0,0]) / A_si
+k_K = 2*np.pi*np.array([0.75,0.75,0])
 
 g, n_2 = find_gs(-2,3,125)
 first_vectors = find_unique(n_2,g,3)
@@ -106,6 +111,10 @@ def create_matrix(k,g_dd, V_g_dd):
         M.append(M_row)
     return np.array(M)
 
+def energy_e_vals(M):
+    return np.linalg.eigvalsh(M)
+
 e_vals = np.linalg.eigvalsh([[1,0],[0,1]])
-print(create_matrix(k,g_dd, V_g_dd_vals))
+M = create_matrix(k_X,g_dd, V_g_dd_vals)
+print(energy_e_vals(M))
 
