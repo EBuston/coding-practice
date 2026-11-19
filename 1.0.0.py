@@ -74,8 +74,8 @@ def matrix_g_dd(gs):
             row.append(val)
         g_dd.append(row)
         g_dd_mag.append(row_mag_sq)
-    print(np.array(g_dd))
-    print(np.array(g_dd_mag))
+    '''print(np.array(g_dd))
+    print(np.array(g_dd_mag))'''
     return np.array(g_dd), np.array(g_dd_mag)
 
 V_of_mag = [[3,0],[8,0],[11,0]] #for free electron
@@ -90,12 +90,22 @@ V_g_dd_vals = V_g_dd_fcc(g_dd,g_dd_mag, V_of_mag, considered_form_factors_Si)
 #print(V_g_dd_vals)
 
 
-def create_matrix(k,g):
-    for i in range(len(g)):
-        eqn = -h_bar**2/(2*m_e*e) * (abs(k + g[i]))**2
-        #print(eqn)
-    return eqn
+def create_matrix(k,g_dd, V_g_dd):
+    M=[]
+    for i in range(len(g_dd)):
+        M_row = []
+        for j in range(len(g_dd)):
+            if g_dd[i][j][0] == g_dd[i][j][1] == g_dd[i][j][2] ==0:
+                #calculate absolute value of k+g_dd
+                val = (k[0]+g_dd[i][j][0])**2 + (k[1]+g_dd[i][j][1])**2 + (k[2]+g_dd[i][j][2])**2
+                eqn = -h_bar**2/(2*m_e*e) * val + V_g_dd[i][j]
+            else:
+                eqn = V_g_dd[i][j]
+            M_row.append(eqn)
+        #print(np.array(M_row))
+        M.append(M_row)
+    return np.array(M)
 
 e_vals = np.linalg.eigvalsh([[1,0],[0,1]])
-#create_matrix(k,g)
+print(create_matrix(k,g_dd, V_g_dd_vals))
 
