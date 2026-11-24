@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 global h_bar, m_e, e
 h_bar = 1.054572*10**(-34)
 m_e = 9.109384*10**(-31)
@@ -21,7 +22,7 @@ def find_gs(min, max, total_vectors):
                 h+=1
     return np.array(g), np.array(n_2)
 
-def find_unique(n_2, g, num_lowest_n_2s):
+def find_unique(g, n_2, num_lowest_n_2s):
     unique=[] #the list of unique n_2 values
     for m in n_2:
         if m not in unique:
@@ -82,27 +83,30 @@ def matrix_g_dd(gs):
 V_of_mag = [[3,0],[8,0],[11,0]] #for free electron
 considered_form_factors_Si = [3,8,11] #considered form factors V3, V8, V11
 #different values of k
-k_lambda = 2*np.pi*np.array([0,0,0]) / A_si
-k_L = 2*np.pi*np.array([0.5, 0.5, 0.5]) / A_si #trial setting for vector k
-k_X = 2*np.pi*np.array([1,0,0]) / A_si
-k_K = 2*np.pi*np.array([0.75,0.75,0])
+k_lambda = np.array([0,0,0])
+k_L = np.array([0.5, 0.5, 0.5]) #trial setting for vector k
+k_X = np.array([1,0,0])
+k_K = np.array([0.75,0.75,0])
 
 g, n_2 = find_gs(-2,3,125)
-first_vectors = find_unique(n_2,g,3)
+first_vectors = find_unique(g,n_2,3)
 #print(first_vectors)
 g_dd, g_dd_mag = matrix_g_dd(first_vectors)
 V_g_dd_vals = V_g_dd_fcc(g_dd,g_dd_mag, V_of_mag, considered_form_factors_Si)
 #print(V_g_dd_vals)
 
 
-def create_matrix(k,g_dd, V_g_dd):
+def create_matrix(k,first_vectors,g_dd, V_g_dd):
     M=[]
+    #print(first_vectors)
     for i in range(len(g_dd)):
         M_row = []
         for j in range(len(g_dd)):
             if g_dd[i][j][0] == g_dd[i][j][1] == g_dd[i][j][2] ==0:
                 #calculate absolute value of k+g_dd
-                val = (k[0]+g_dd[i][j][0])**2 + (k[1]+g_dd[i][j][1])**2 + (k[2]+g_dd[i][j][2])**2
+                #print(first_vectors[j])
+                val = (k[0]+first_vectors[j][0])**2 + (k[1]+first_vectors[j][1])**2 + (k[2]+first_vectors[j][2])**2
+                #print(val)
                 eqn = -h_bar**2/(2*m_e*e) * val + V_g_dd[i][j]
             else:
                 eqn = V_g_dd[i][j]
@@ -115,6 +119,46 @@ def energy_e_vals(M):
     return np.linalg.eigvalsh(M)
 
 e_vals = np.linalg.eigvalsh([[1,0],[0,1]])
-M = create_matrix(k_X,g_dd, V_g_dd_vals)
-print(energy_e_vals(M))
+M = create_matrix(k_L,g,g_dd, V_g_dd_vals)
+#print(energy_e_vals(M))
 
+def vals_for_a_k(k,A):
+    g, n_2 = find_gs(-2,3,125)
+    first_vectors = find_unique(g,n_2,3)
+    g_dd, g_dd_mag = matrix_g_dd(first_vectors)
+    V_g_dd_vals = V_g_dd_fcc(g_dd,g_dd_mag, V_of_mag, considered_form_factors_Si)
+    M = create_matrix(2*np.pi*k/A,first_vectors,g_dd, V_g_dd_vals)
+    return energy_e_vals(M)
+
+print('lambda',vals_for_a_k(k_lambda,A_si))
+print('X',vals_for_a_k(k_X,A_si))
+print('K',vals_for_a_k(k_K,A_si))
+
+
+def e_vals_between_ks(k1,k2,A):
+    
+    interval = 2*np.pi/(A * 200)
+    ks = []
+    energies = []
+    for i in range(200):
+        k = i*interval*k2
+        #print(np.sqrt(k[0]**2 + k[1]**2 + k[2]**2))
+        ks.append(np.sqrt(k[0]**2 + k[1]**2 + k[2]**2))
+        energies.append(vals_for_a_k(k,A)[0])
+    '''plt.errorbar(ks[::-1], energies[::-1], marker='x') # no connecting lines
+    plt.xlabel('x data (units)') # axis labels and units
+    plt.ylabel('y data (units)')
+    plt.show() '''
+
+    return ks, energies
+
+'''plt.figure(figsize=(5,4))
+ks_lam, energies_lam = e_vals_between_ks(k_lambda,k_L,A_si)
+plt.errorbar(ks_lam[::], energies_lam[::], marker='x',color='blue',label='lam to L') # no connecting lines
+
+ks_X, energies_X = e_vals_between_ks(k_lambda,k_X,A_si)
+plt.errorbar(ks_X, energies_X, marker='o',color='red',label='lam to X') # no connecting lines
+plt.xlabel('k') # axis labels and units
+plt.ylabel('Energy (eV)')
+plt.legend()
+plt.show() '''
