@@ -1,5 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.linalg import ishermitian
 global h_bar, m_e, e
 h_bar = 1.054572*10**(-34)
 m_e = 9.109384*10**(-31)
@@ -99,10 +100,11 @@ V_g_dd_vals = V_g_dd_fcc(g_dd,g_dd_mag, V_of_mag, considered_form_factors_Si)
 def create_matrix(k,first_vectors,g_dd,g_dd_mag, V_g_dd):
     M=[]
     #print(first_vectors)
-    for i in range(len(g_dd)):
+    for i in range(len(first_vectors)):
         M_row = []
-        for j in range(len(g_dd)):
-            if g_dd_mag[i][j] in [3,8,11]:
+        for j in range(len(first_vectors)):
+            if i==j:
+            #if g_dd_mag[i][j] ==0:#in [3,8,11]:
                 #print(g_dd[i][j])
                 #calculate absolute value of k+g_dd
                 #print(first_vectors[j])
@@ -121,9 +123,11 @@ def energy_e_vals(M):
     return np.linalg.eigvalsh(M)
 
 const = 2*np.pi/A_si
-
-e_vals = np.linalg.eigvalsh([[1,0],[0,1]])
+print(energy_e_vals(np.array([[1,2,3],[2,4,5],[3,5,6]])))
+#e_vals = np.linalg.eigvalsh([[1,0],[0,1]])
 M = create_matrix(k_L,first_vectors,g_dd,g_dd_mag, V_g_dd_vals)
+print(ishermitian(M))
+print(M)
 print(energy_e_vals(M))
 
 def vals_for_a_k(k,A):
@@ -146,9 +150,10 @@ def e_vals_between_ks(k1,k2,A):
     ks = []
     energies = []
     for i in range(200):
-        k_used = i*interval*k2
+        k_used = k1 + i*interval*k2
         #print(np.sqrt(k[0]**2 + k[1]**2 + k[2]**2))
         xs = [np.sqrt(k_used[0]**2 + k_used[1]**2 + k_used[2]**2)]*15
+        #print(xs)
         ks.append(xs)
 
         #print(vals_for_a_k(k_used,A))
@@ -158,6 +163,10 @@ def e_vals_between_ks(k1,k2,A):
     plt.ylabel('y data (units)')
     plt.show() '''
 
+    '''for i in range(200 + 1):
+        point = k1 + i/200 * (k2-k1)
+        print(point)
+'''
     return ks, energies
 
 plt.figure(figsize=(5,4))
@@ -165,7 +174,7 @@ ks_lam, energies_lam = e_vals_between_ks(k_lambda,k_L,A_si)
 ks_X, energies_X = e_vals_between_ks(k_lambda,k_X,A_si)
 
 for i in range(200):
-    plt.scatter(ks_lam[200-i-1], energies_lam[i], marker='x',color='blue') # no connecting lines
+    plt.scatter(ks_lam[i], energies_lam[200-i-1], marker='x',color='blue') # no connecting lines
 
     plt.scatter([j+const for j in ks_X[i]], energies_X[i], marker='x',color='red') # no connecting lines
 plt.xlabel('k') # axis labels and units
