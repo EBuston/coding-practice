@@ -84,100 +84,106 @@ def matrix_g_dd(gs):
 V_of_mag = [[3,0],[8,0],[11,0]] #for free electron
 considered_form_factors_Si = [3,8,11] #considered form factors V3, V8, V11
 #different values of k
-k_lambda = np.array([0,0,0])*2*np.pi/A_si
-k_L = np.array([0.5, 0.5, 0.5])*2*np.pi/A_si #trial setting for vector k
-k_X = np.array([1,0,0])*2*np.pi/A_si
-k_K = np.array([0.75,0.75,0])*2*np.pi/A_si
+k_lambda = np.array([0,0,0])#*2*np.pi/A_si
+k_L = np.array([0.5, 0.5, 0.5])#*2*np.pi/A_si #trial setting for vector k
+k_X = np.array([1,0,0])#*2*np.pi/A_si
+k_K = np.array([0.75,0.75,0])#*2*np.pi/A_si
 
 g, n_2 = find_gs(-2,3,125)
 first_vectors = find_unique(g,n_2,3)
 #print(first_vectors)
-g_dd, g_dd_mag = matrix_g_dd(first_vectors)
-V_g_dd_vals = V_g_dd_fcc(g_dd,g_dd_mag, V_of_mag, considered_form_factors_Si)
-#print(V_g_dd_vals)
+print()
+#print(matrix_g_dd(first_vectors)[0])
+#print(V_g_dd_fcc(g_dd, g_dd_mag, V_of_mag_g_d, considered_form_factors))
 
 
-def create_matrix(k,first_vectors,g_dd,g_dd_mag, V_g_dd):
-    M=[]
-    #print(first_vectors)
-    for i in range(len(first_vectors)):
+def energy_matrix(gs, k):
+    M = []
+    for i in range(len(gs)):
         M_row = []
-        for j in range(len(first_vectors)):
+        for j in range(len(gs)):
             if i==j:
-            #if g_dd_mag[i][j] ==0:#in [3,8,11]:
-                #print(g_dd[i][j])
-                #calculate absolute value of k+g_dd
-                #print(first_vectors[j])
-                #print()
-                val = (k[0]+first_vectors[j][0])**2 + (k[1]+first_vectors[j][1])**2 + (k[2]+first_vectors[j][2])**2
-                #print(val)
-                eqn = -((h_bar**2)/(2*m_e*e)) * val + V_g_dd[i][j]
+                vector_mag_sq = ((k[0]+gs[i][0])**2 + (k[1]+gs[i][1])**2 + (k[2]+gs[i][2])**2) * ((2*np.pi/A_si)**2)
+                element = ((h_bar**2)/(2*m_e*e)) * vector_mag_sq
             else:
-                eqn = V_g_dd[i][j]
-            M_row.append(eqn)
-        #print(np.array(M_row))
+                element = 0
+            M_row.append(element)
         M.append(M_row)
     return np.array(M)
 
+#print(energy_matrix(first_vectors,k_L))
+
+
 def energy_e_vals(M):
     return np.linalg.eigvalsh(M)
-
-const = 2*np.pi/A_si
-print(energy_e_vals(np.array([[1,2,3],[2,4,5],[3,5,6]])))
-#e_vals = np.linalg.eigvalsh([[1,0],[0,1]])
-M = create_matrix(k_L,first_vectors,g_dd,g_dd_mag, V_g_dd_vals)
-print(ishermitian(M))
-print(M)
-print(energy_e_vals(M))
 
 def vals_for_a_k(k,A):
     g, n_2 = find_gs(-2,3,125)
     first_vectors = find_unique(g,n_2,3)
     g_dd, g_dd_mag = matrix_g_dd(first_vectors)
     V_g_dd_vals = V_g_dd_fcc(g_dd,g_dd_mag, V_of_mag, considered_form_factors_Si)
-    M = create_matrix(k,first_vectors,g_dd, g_dd_mag, V_g_dd_vals)
+    M = energy_matrix(first_vectors,k)
     return energy_e_vals(M)
+#print(vals_for_a_k(k_L,A_si))
 
-print('lambda',vals_for_a_k(k_lambda,A_si))
-print('X',vals_for_a_k(k_X,A_si))
-print('K',vals_for_a_k(k_K,A_si))
-print('L',vals_for_a_k(k_L,A_si))
+'''plt.figure(figsize=(5,4))
+xs = [np.sqrt((k_L[0])**2 + k_L[1]**2 + k_L[2]**2)] * 15
+plt.scatter(xs, vals_for_a_k(k_L,A_si))
+plt.show()'''
 
 
 def e_vals_between_ks(k1,k2,A):
-    
-    interval = 2*np.pi/(A * 200)
+    #ks = np.linspace(0,2*np.pi/A,200)
+    ks = np.linspace(0,1,200)
+    print(ks)
+    energies = []
+    for i in ks:
+        k_vector = k2 * i
+        print(k_vector)
+        energies_for_k_vector = vals_for_a_k(k_vector,A)
+        print(energies_for_k_vector)
+        energies.append(energies_for_k_vector)
+    #print(energies)
+    return ks, energies
+    '''interval = 2*np.pi/(A * 200)
     ks = []
     energies = []
     for i in range(200):
-        k_used = k1 + i*interval*k2
+
+        k =  i*interval*k1
         #print(np.sqrt(k[0]**2 + k[1]**2 + k[2]**2))
-        xs = [np.sqrt(k_used[0]**2 + k_used[1]**2 + k_used[2]**2)]*15
-        #print(xs)
-        ks.append(xs)
+        ks.append([np.sqrt(k[0]**2 + k[1]**2 + k[2]**2)]*15)
+        #ks.append()
+        energies.append(vals_for_a_k(k,A))
+    return ks, energies'''
 
-        #print(vals_for_a_k(k_used,A))
-        energies.append(vals_for_a_k(k_used,A))
-    '''plt.errorbar(ks[::-1], energies[::-1], marker='x') # no connecting lines
-    plt.xlabel('x data (units)') # axis labels and units
-    plt.ylabel('y data (units)')
-    plt.show() '''
 
-    '''for i in range(200 + 1):
-        point = k1 + i/200 * (k2-k1)
-        print(point)
-'''
-    return ks, energies
 
+k_vals = [k_L,k_lambda,k_X, k_K]
 plt.figure(figsize=(5,4))
-ks_lam, energies_lam = e_vals_between_ks(k_lambda,k_L,A_si)
-ks_X, energies_X = e_vals_between_ks(k_lambda,k_X,A_si)
+'''for i in range(4):
+    xs = [np.sqrt((k_vals[i][0])**2 + k_vals[i][1]**2 + k_vals[i][2]**2)] * 15
+    plt.scatter(xs, vals_for_a_k(k_vals[i],A_si),marker = 'x')'''
 
-for i in range(200):
-    plt.scatter(ks_lam[i], energies_lam[200-i-1], marker='x',color='blue') # no connecting lines
-
-    plt.scatter([j+const for j in ks_X[i]], energies_X[i], marker='x',color='red') # no connecting lines
 plt.xlabel('k') # axis labels and units
 plt.ylabel('Energy (eV)')
-#plt.legend()
+#plt.show()
+
+lam_to_L_x, lam_to_L_y = e_vals_between_ks(k_lambda,k_L,A_si)
+lam_to_L_xs = []
+for i in lam_to_L_x:
+    lam_to_L_xs.append([i]*15)
+#print(len(lam_to_L_xs),len(lam_to_L_y))
+#plt.figure(figsize =(5,4))
+#for xe, ye in zip(lam_to_L_x, lam_to_L_y):
+#    plt.scatter([xe] * len(ye), ye)
+#    print([xe]*len(ye))
+#    print(ye)#
+for i in range(len(lam_to_L_x)):
+    #print([lam_to_L_y[i]])
+    plt.scatter([lam_to_L_x[i]]*15, lam_to_L_y[len(lam_to_L_x)-i-1],s=2,color='blue')
+    #plt.show()
+
+#plt.scatter(lam_to_L_xs,lam_to_L_y)
+#plt.scatter()
 plt.show()
